@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "217754635483",
+    "project_id": "taxilk-260db",
+    "storage_bucket": "taxilk-260db.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:217754635483:android:5755b7dabe59fe83cb90fe",
+        "android_client_info": {
+          "package_name": "com.taxi.lk.taxilk"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "217754635483-7qffov77gcbem9m851ochqaausruq4do.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.taxi.lk.taxilk",
+            "certificate_hash": "cfed347a180c17080019b93a8ea50b598801672e"
+          }
+        },
+        {
+          "client_id": "217754635483-qf8a0c1co16qijnptitgpm1t7ghul6d7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcKq4UrpMn-03ZUxCxypOOoIoDqTLQ2l0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "217754635483-qf8a0c1co16qijnptitgpm1t7ghul6d7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
