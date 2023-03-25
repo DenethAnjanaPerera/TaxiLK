@@ -1,8 +1,20 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:taxilk/AllWidgets/ProgressDialog.dart';
 
+import '../main.dart';
 import 'LoginScreen.dart';
+import 'MainScreen.dart';
+
 class RegistrationScreen extends StatelessWidget{
+  TextEditingController nameTestEditingController=TextEditingController();
+  TextEditingController emailTestEditingController=TextEditingController();
+  TextEditingController phoneTestEditingController=TextEditingController();
+  TextEditingController passwordTestEditingController=TextEditingController();
+
+
   static const String idScreen="register";
   @override
   Widget build(BuildContext context) {
@@ -19,62 +31,68 @@ class RegistrationScreen extends StatelessWidget{
               alignment: Alignment.center,),
             SizedBox(
               height: 1.0,
-            ),Text("Register as Rider",style: TextStyle(
+            ), Text("Register as Rider", style: TextStyle(
               fontSize: 24.0,
               fontFamily: "Brand Bold",
-            ),textAlign: TextAlign.center,
+            ), textAlign: TextAlign.center,
 
-            ),Padding(padding:EdgeInsets.all(20.0),
+            ), Padding(padding: EdgeInsets.all(20.0),
               child: Column(
                 children: [
 
                   SizedBox(height: 1.0,),
-                  TextField(keyboardType: TextInputType.text,
+                  TextField(
+                    controller: nameTestEditingController,
+                    keyboardType: TextInputType.text,
                     decoration: InputDecoration(
                       labelText: "Name",
                       labelStyle: TextStyle(
                         fontSize: 14.0,
-                      ),hintStyle: TextStyle(
+                      ), hintStyle: TextStyle(
                       color: Colors.grey,
                       fontSize: 10.0,
                     ),
-                    ),style: TextStyle(
-                      fontSize: 14.0,
-                    ),
+                    ), style: TextStyle(
+                    fontSize: 14.0,
+                  ),
 
                   ),
                   SizedBox(height: 1.0,),
-                  TextField(keyboardType: TextInputType.emailAddress,
+                  TextField(controller: emailTestEditingController,
+                    keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       labelText: "Email",
                       labelStyle: TextStyle(
                         fontSize: 14.0,
-                      ),hintStyle: TextStyle(
+                      ), hintStyle: TextStyle(
                       color: Colors.grey,
                       fontSize: 10.0,
                     ),
-                    ),style: TextStyle(
-                      fontSize: 14.0,
-                    ),
-
-                  ),
-                  SizedBox(height: 1.0,),
-                  TextField(keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      labelText: "Phone",
-                      labelStyle: TextStyle(
-                        fontSize: 14.0,
-                      ),hintStyle: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 10.0,
-                    ),
-                    ),style: TextStyle(
+                    ), style: TextStyle(
                       fontSize: 14.0,
                     ),
 
                   ),
                   SizedBox(height: 1.0,),
                   TextField(
+                    controller:phoneTestEditingController,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      labelText: "Phone",
+                      labelStyle: TextStyle(
+                        fontSize: 14.0,
+                      ), hintStyle: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 10.0,
+                    ),
+                    ), style: TextStyle(
+                    fontSize: 14.0,
+                  ),
+
+                  ),
+                  SizedBox(height: 1.0,),
+                  TextField(
+                    controller: passwordTestEditingController,
                     obscureText: true,
                     decoration: InputDecoration(
                       labelText: "Password",
@@ -86,9 +104,9 @@ class RegistrationScreen extends StatelessWidget{
                         fontSize: 10.0,
                       ),
                     ),
-                  ),SizedBox(
+                  ), SizedBox(
                     height: 1.0,
-                  ),RaisedButton(
+                  ), RaisedButton(
                     color: Colors.yellow,
                     child: Container(
                       height: 50.0,
@@ -101,24 +119,42 @@ class RegistrationScreen extends StatelessWidget{
 
                         ),
                       ),
-                    ),shape: new RoundedRectangleBorder(
+                    ), shape: new RoundedRectangleBorder(
                     borderRadius: new BorderRadius.circular(
                       24.0,
                     ),
-                  ),onPressed: (){
-                    print("Logged in button clicked");
+                  ), onPressed: () {
+                    if(nameTestEditingController.text.length<3){
+                      displayToastMesssage("name must be atleast 3 charatcers", context);
+                    }else
+
+                    if(!emailTestEditingController.text.contains("@")) {
+                      displayToastMesssage("Email is not valid!", context);
+                    }
+                    else if(phoneTestEditingController.text.isEmpty){
+                      displayToastMesssage("Number is mandatory", context);
+                    }
+
+                    else if(passwordTestEditingController.text.length<6){
+                      displayToastMesssage("Passwod must be at least 6 characters", context);
+                    }
+
+                    else{
+                      registerNewUser(context);
+
+                    }
                   },
                   ),
 
                 ],
               ),
 
-            ),FlatButton(onPressed: (){
-              Navigator.pushNamedAndRemoveUntil(context, LoginScreen.idScreen, (route) => false);
-
-            },child: Text(
+            ), FlatButton(onPressed: () {
+              Navigator.pushNamedAndRemoveUntil(
+                  context, LoginScreen.idScreen, (route) => false);
+            }, child: Text(
                 "Already have an Account? Login here"
-            ),  ),
+            ),),
 
 
           ],
@@ -126,5 +162,36 @@ class RegistrationScreen extends StatelessWidget{
       ),
     );
   }
+  final FirebaseAuth _firebaseAuth=FirebaseAuth.instance;
+  void registerNewUser(BuildContext context)async{
+    showDialog(context: context,barrierDismissible: false,builder: (BuildContext context){
+      return ProgressDialog(message: "Registering.. please wait...",);
+    } );
+    final User firebaseUser=(await _firebaseAuth.createUserWithEmailAndPassword(
+      email: emailTestEditingController.text,
+      password: passwordTestEditingController.text,
+    ).catchError((errMsg){
+      displayToastMesssage("Error: "+errMsg.toString(),context);
+    })).user;
+    if(firebaseUser!=null){
+      //save user
+      userRef.child(firebaseUser.uid);
+      Map userPathMap={
+        "name":nameTestEditingController.text.trim(),
+        "email":emailTestEditingController.text.trim(),
+        "phone":phoneTestEditingController.text.trim(),
+      };
+      userRef.child(firebaseUser.uid).set(userPathMap);
+      displayToastMesssage("Congratulations your account has been created!", context);
+      Navigator.pushNamedAndRemoveUntil(context, MainScreen.idScreen, (route) => false);
 
+    }else{
+      //error ocurred
+      Navigator.pop(context);
+      displayToastMesssage("New user account has not been created!", context);
+    }
+  }
+  displayToastMesssage(String message,BuildContext context){
+    Fluttertoast.showToast(msg: message);
+  }
 }
