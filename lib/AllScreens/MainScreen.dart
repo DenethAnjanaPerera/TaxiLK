@@ -3,8 +3,9 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
@@ -33,6 +34,10 @@ class _State extends State<MainScreen>{
   Completer<GoogleMapController>_controllerGoogleMap=Completer();
   GoogleMapController newGoogleMapController;
   GlobalKey<ScaffoldState>scaffoldKey=new GlobalKey<ScaffoldState>();
+  List<LatLng>plineCoordinates=[];
+  Set<Polyline>polylineSet={};
+  Set<Marker>markersSet={};
+  Set<Circle>circleSet={};
   Position currentPosition;
   var geolocator=Geolocator();
   double bottomPaddingOfMap=0;
@@ -122,6 +127,9 @@ class _State extends State<MainScreen>{
             myLocationEnabled: true,
             zoomControlsEnabled: true,
             zoomGesturesEnabled: true,
+            polylines: polylineSet,
+            markers: markersSet,
+            circles: circleSet,
             initialCameraPosition: _kGooglePlex,onMapCreated: (GoogleMapController controller){
               _controllerGoogleMap.complete(controller);
               newGoogleMapController=controller;
@@ -267,6 +275,92 @@ class _State extends State<MainScreen>{
           ),
 
           ),),
+          Positioned(bottom: 0.0,left: 0.0,right: 0.0,
+            child: Container(
+              height: 230.0,
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(topLeft: Radius.circular(16.0),topRight:
+                  Radius.circular(16.0),
+                  ),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black,blurRadius: 16.0,spreadRadius: 0.5,offset: Offset(0.7,
+                      0.7,)),
+                  ]
+              ),child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 17.0,),
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,color: Colors.tealAccent[100],
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        children: [
+                          Image.asset("images/taxi.png",height: 70.0,width: 80.0,),
+                          SizedBox(width: 16.0,),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Car",style: TextStyle(fontSize: 18.0,fontFamily: "Brand-Bold"),),
+                              Text("10Km",style: TextStyle(
+                                fontSize: 16.0,
+                                color: Colors.grey,
+
+                              ),
+                              ),
+                            ],
+                          ),
+
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20.0,),
+                  Padding(padding: EdgeInsets.symmetric(horizontal: 20.0),child:
+                  Row(
+                    children: [
+                      Icon(FontAwesomeIcons.moneyCheckAlt,size: 18.0,color: Colors.black54,
+                      ),
+                      SizedBox(width: 6.0,),
+                      Text("Cash"),
+                      SizedBox(width: 6.0,),
+                      Icon(Icons.keyboard_arrow_down,color: Colors.black54,size: 16.0,),
+
+                    ],
+                  ),
+                  ),
+                  SizedBox(height: 24.0,),
+                  Padding(padding:EdgeInsets.symmetric(horizontal: 16.0),child:
+                  RaisedButton(
+                    onPressed: (){
+                      print("Clicked");
+                    },
+                    color: Theme.of(context).accentColor,
+                    child: Padding(
+                      padding: EdgeInsets.all(17.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Request",style: TextStyle(
+                            fontSize: 20.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+
+                          ),
+
+                          ),Icon(FontAwesomeIcons.taxi,color: Colors.white,
+                            size: 26.0,),
+                        ],
+                      ),
+                    ),
+                  ), ),
+                ],
+              ),
+            ),
+            ),
+          ),
         ],
       ),
     );
@@ -289,4 +383,57 @@ class _State extends State<MainScreen>{
     Navigator.pop(context);
     print("This is Encoded Points::");
     print(details.encodedPoints);
+    PolylinePoints polylinePoints=PolylinePoints();
+    List<PointLatLng> decodedPolylinePointsResult=polylinePoints.decodePolyline(details.encodedPoints);
+    plineCoordinates.clear();
+    if(decodedPolylinePointsResult.isNotEmpty){
+      decodedPolylinePointsResult.forEach((PointLatLng pointLatLng) {
+        plineCoordinates.add(LatLng(pointLatLng.latitude, pointLatLng.longitude));
+      });
+      polylineSet.clear();
+      setState(() {
+        Polyline polyline=Polyline(color: Colors.pink,polylineId: PolylineId("PolylineID"),
+          jointType: JointType.round,
+          points: plineCoordinates,
+          width: 5,
+          startCap: Cap.roundCap,
+          endCap: Cap.roundCap,
+          geodesic: true,);
+        polylineSet.add(polyline);
+      });
+      LatLngBounds latLngBounds;
+      if(pickuplatLang.latitude>dropOfflatLang.latitude&&pickuplatLang.longitude>dropOfflatLang.longitude){
+        latLngBounds=LatLngBounds(southwest: dropOfflatLang, northeast: pickuplatLang);
+      }else if(pickuplatLang.longitude>dropOfflatLang.longitude){
+        latLngBounds=LatLngBounds(southwest:LatLng(pickuplatLang.latitude,dropOfflatLang.longitude
+        ), northeast: LatLng(dropOfflatLang.latitude,pickuplatLang.longitude));
+      }else if(pickuplatLang.latitude>dropOfflatLang.latitude){
+        latLngBounds=LatLngBounds(southwest: LatLng(dropOfflatLang.latitude,pickuplatLang.longitude
+        ), northeast: LatLng(pickuplatLang.latitude,dropOfflatLang.longitude));
+      }else{
+        latLngBounds=LatLngBounds(southwest: pickuplatLang, northeast: dropOfflatLang);
+      }
+      newGoogleMapController.animateCamera(CameraUpdate.newLatLngBounds(latLngBounds, 70));
+      Marker pickupLocMarker=Marker(icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueYellow),infoWindow:InfoWindow(
+        title: initialPos.placeName,snippet: "My Location",
+      ), position: pickuplatLang,markerId: MarkerId("pickupID"));
+      Marker dropoffLocMarker=Marker(icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),infoWindow:InfoWindow(
+        title: finalPos.placeName,snippet: "Drop Off Location",
+      ), position: dropOfflatLang,markerId: MarkerId("dropoffID"));
+      setState(() {
+        markersSet.add(pickupLocMarker);
+        markersSet.add(dropoffLocMarker);
+      });
+      Circle pickupLocCircle=Circle(fillColor: Colors.blueAccent,center: pickuplatLang,radius: 12,strokeWidth: 4,
+        strokeColor: Colors.blueAccent,
+        circleId: CircleId("pickupID"),
+      );
+      Circle dropoffLocCircle=Circle(fillColor: Colors.red,center: dropOfflatLang,radius: 12,strokeWidth: 4,
+          strokeColor: Colors.deepPurple,
+          circleId: CircleId("dropoffID"));
+      setState(() {
+        circleSet.add(pickupLocCircle);
+        circleSet.add(dropoffLocCircle);
+      });
+    }
   }}
