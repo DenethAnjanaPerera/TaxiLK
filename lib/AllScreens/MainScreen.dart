@@ -13,6 +13,7 @@ import 'package:taxilk/AllWidgets/DividerWidget.dart';
 import 'package:taxilk/AllWidgets/ProgressDialog.dart';
 import 'package:taxilk/Assistants/AssistantMethods.dart';
 import 'package:taxilk/DataHandler/AppData.dart';
+import 'package:taxilk/Models/directionDetails.dart';
 
 
 import 'SearchScreen.dart';
@@ -34,18 +35,23 @@ class _State extends State<MainScreen> with TickerProviderStateMixin{
   Completer<GoogleMapController>_controllerGoogleMap=Completer();
   GoogleMapController newGoogleMapController;
   GlobalKey<ScaffoldState>scaffoldKey=new GlobalKey<ScaffoldState>();
+  directionDetails tripDirectionDetails;
+
   List<LatLng>plineCoordinates=[];
   Set<Polyline>polylineSet={};
   Set<Marker>markersSet={};
   Set<Circle>circleSet={};
   double rideDetailsContainerHeight=0;
   double searchContainerHeight=300.0;
+  bool drawerOpen=true;
+
   void displayRideDetailsContainer()async{
     await getPlaceDirection();
     setState(() {
       searchContainerHeight=0;
       rideDetailsContainerHeight=240.0;
       bottomPaddingOfMap=230.0;
+      drawerOpen=false;
     });
   }
   Position currentPosition;
@@ -148,29 +154,36 @@ class _State extends State<MainScreen> with TickerProviderStateMixin{
               });
               locationPosition();
             },),
-          Positioned(child: GestureDetector(
-            onTap: (){
-              scaffoldKey.currentState.openDrawer();
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(22.0),boxShadow: [
-                BoxShadow(
-                  blurRadius: 6.0,
-                  spreadRadius: 0.5,
-                  offset: Offset(
-                      0.7,0.7
-                  ),
-                ),
+          Positioned( top: 38.0,left: 22.0,
+            child: GestureDetector(
 
-              ]
-              ),child: CircleAvatar(
-              backgroundColor: Colors.white,
-              child: Icon(Icons.menu,color: Colors.black,),radius: 20.0,
-            ),
-            ),
-          ),),
+              onTap: (){
+                if(drawerOpen){
+
+                  scaffoldKey.currentState.openDrawer();
+                }else{
+                  resetApp();
+                }
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(22.0),boxShadow: [
+                  BoxShadow(
+                    blurRadius: 6.0,
+                    spreadRadius: 0.5,
+                    offset: Offset(
+                        0.7,0.7
+                    ),
+                  ),
+
+                ]
+                ),child: CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Icon((drawerOpen)?Icons.menu:Icons.close,color: Colors.black,),radius: 20.0,
+              ),
+              ),
+            ),),
           Positioned(
             left: 0.0,right: 0.0,bottom: 0.0,
             child:
@@ -325,7 +338,7 @@ class _State extends State<MainScreen> with TickerProviderStateMixin{
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text("Car",style: TextStyle(fontSize: 18.0,fontFamily: "Brand-Bold"),),
-                                Text("10Km",style: TextStyle(
+                                Text((tripDirectionDetails!=null)?tripDirectionDetails.distanceText:'',style: TextStyle(
                                   fontSize: 16.0,
                                   color: Colors.grey,
 
@@ -333,6 +346,10 @@ class _State extends State<MainScreen> with TickerProviderStateMixin{
                                 ),
                               ],
                             ),
+                            Expanded(child: Container()),
+                            Text((tripDirectionDetails!=null)?'\$${AssistantMethods.calculatefares(tripDirectionDetails)}':'',style: TextStyle(
+                              fontFamily: "Brand-Bold",
+                            ),),
 
                           ],
                         ),
@@ -402,7 +419,9 @@ class _State extends State<MainScreen> with TickerProviderStateMixin{
             ProgressDialog(message: "Please wait..",)
     );
     var details = await AssistantMethods.obtainplacedirectionDetails(pickuplatLang, dropOfflatLang);
-
+    setState(() {
+      tripDirectionDetails=details;
+    });
     Navigator.pop(context);
     print("This is Encoded Points::");
     print(details.encodedPoints);
@@ -459,4 +478,21 @@ class _State extends State<MainScreen> with TickerProviderStateMixin{
         circleSet.add(dropoffLocCircle);
       });
     }
-  }}
+
+  }
+  resetApp(){
+    setState(() {
+
+      drawerOpen=true;
+      searchContainerHeight=300.0;
+      rideDetailsContainerHeight=0;
+      bottomPaddingOfMap=230.0;
+      polylineSet.clear();
+      markersSet.clear();
+      circleSet.clear();
+      plineCoordinates.clear();
+
+    });
+    locationPosition();
+  }
+}
