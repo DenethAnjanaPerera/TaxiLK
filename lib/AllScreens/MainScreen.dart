@@ -11,6 +11,7 @@ import 'package:taxilk/AllWidgets/DividerWidget.dart';
 import 'package:taxilk/Assistants/AssistantMethods.dart';
 import 'package:taxilk/DataHandler/AppData.dart';
 
+
 import 'SearchScreen.dart';
 
 void main(){
