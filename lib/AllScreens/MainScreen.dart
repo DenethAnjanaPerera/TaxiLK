@@ -6,8 +6,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:taxilk/AllWidgets/DividerWidget.dart';
 import 'package:taxilk/Assistants/AssistantMethods.dart';
+import 'package:taxilk/DataHandler/AppData.dart';
 
 void main(){
   runApp(new MaterialApp(
@@ -38,8 +40,8 @@ class _State extends State<MainScreen>{
     CameraPosition cameraPosition=new CameraPosition(target: latLatPosition,zoom: 14);
     newGoogleMapController.animateCamera(CameraUpdate.newCameraPosition(cameraPosition
     ));
-    String address = await AssistantMethods.searchcoordinateAddress(position);
-    print("This is your Address ::" + address);
+    String address=await AssistantMethods.searchcoordinateAddress(position,context);
+    print("This is your Address ::"+address);
   }
   final CameraPosition _kGooglePlex=CameraPosition(target:
   LatLng(6.927079,79.861244),zoom: 14.4746
@@ -125,7 +127,7 @@ class _State extends State<MainScreen>{
             },),
           Positioned(child: GestureDetector(
             onTap: (){
-              scaffoldKey.currentState?.openDrawer();
+              scaffoldKey.currentState.openDrawer();
             },
             child: Container(
               decoration: BoxDecoration(
@@ -211,7 +213,8 @@ class _State extends State<MainScreen>{
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Add home"),
+                        Text(Provider.of<AppData>(context).pickUplocation!=null?
+                        Provider.of<AppData>(context).pickUplocation.placeName:"Add Home", ),
                         SizedBox(height: 4.0,),
                         Text(
                           "Your living home Address",
