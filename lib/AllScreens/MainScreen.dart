@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:taxilk/AllWidgets/DividerWidget.dart';
+import 'package:taxilk/AllWidgets/ProgressDialog.dart';
 import 'package:taxilk/Assistants/AssistantMethods.dart';
 import 'package:taxilk/DataHandler/AppData.dart';
 
@@ -184,8 +185,12 @@ class _State extends State<MainScreen>{
                 ),SizedBox(
                   height: 20.0,
                 ),GestureDetector(
-                  onTap: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=> SearchScreen()));
+                  onTap: ()async{
+                    var res=await Navigator.push(context, MaterialPageRoute(builder: (context)=> SearchScreen()));
+                    if(res=="obtainDirection"){
+                      getPlaceDirection();
+                    }
+
                   },
                   child: Container(
                     decoration: BoxDecoration(color:Colors.white,borderRadius: BorderRadius.circular(5.0),
@@ -266,5 +271,22 @@ class _State extends State<MainScreen>{
       ),
     );
   }
+  Future<void> getPlaceDirection()async {
+    var initialPos = Provider
+        .of<AppData>(context, listen: false)
+        .pickUplocation;
+    var finalPos = Provider
+        .of<AppData>(context, listen: false)
+        .dropOffLocation;
+    var pickuplatLang = LatLng(initialPos.latitude, initialPos.longitude);
+    var dropOfflatLang = LatLng(finalPos.latitude, finalPos.longitude);
+    showDialog(context: context,
+        builder: (BuildContext context) =>
+            ProgressDialog(message: "Please wait..",)
+    );
+    var details = await AssistantMethods.obtainplacedirectionDetails(pickuplatLang, dropOfflatLang);
 
-}
+    Navigator.pop(context);
+    print("This is Encoded Points::");
+    print(details.encodedPoints);
+  }}
